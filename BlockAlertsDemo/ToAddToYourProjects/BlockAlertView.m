@@ -140,155 +140,160 @@ static UIFont *buttonFont = nil;
 
 - (void)show
 {
-    BOOL isSecondButton = NO;
-    NSUInteger index = 0;
-    for (NSUInteger i = 0; i < _blocks.count; i++)
+    if([[BlockBackground sharedInstance]animationFlag])
     {
-        NSArray *block = [_blocks objectAtIndex:i];
-        NSString *title = [block objectAtIndex:1];
-        NSString *color = [block objectAtIndex:2];
-
-        UIImage *image = [UIImage imageNamed:[NSString stringWithFormat:@"alert-%@-button.png", color]];
-        image = [image stretchableImageWithLeftCapWidth:(int)(image.size.width+1)>>1 topCapHeight:0];
-        
-        CGFloat maxHalfWidth = floorf((_view.bounds.size.width-kAlertViewBorder*3)*0.5);
-        CGFloat width = _view.bounds.size.width-kAlertViewBorder*2;
-        CGFloat xOffset = kAlertViewBorder;
-        if (isSecondButton)
+        [[BlockBackground sharedInstance] setAnimationFlag:NO];
+        BOOL isSecondButton = NO;
+        NSUInteger index = 0;
+        for (NSUInteger i = 0; i < _blocks.count; i++)
         {
-            width = maxHalfWidth;
-            xOffset = width + kAlertViewBorder * 2;
-            isSecondButton = NO;
-        }
-        else if (i + 1 < _blocks.count)
-        {
-            // In this case there's another button.
-            // Let's check if they fit on the same line.
-            CGSize size = [title sizeWithFont:buttonFont 
-                                  minFontSize:10 
-                               actualFontSize:nil
-                                     forWidth:_view.bounds.size.width-kAlertViewBorder*2 
-                                lineBreakMode:UILineBreakModeClip];
+            NSArray *block = [_blocks objectAtIndex:i];
+            NSString *title = [block objectAtIndex:1];
+            NSString *color = [block objectAtIndex:2];
             
-            if (size.width < maxHalfWidth - kAlertViewBorder)
+            UIImage *image = [UIImage imageNamed:[NSString stringWithFormat:@"alert-%@-button.png", color]];
+            image = [image stretchableImageWithLeftCapWidth:(int)(image.size.width+1)>>1 topCapHeight:0];
+            
+            CGFloat maxHalfWidth = floorf((_view.bounds.size.width-kAlertViewBorder*3)*0.5);
+            CGFloat width = _view.bounds.size.width-kAlertViewBorder*2;
+            CGFloat xOffset = kAlertViewBorder;
+            if (isSecondButton)
             {
-                // It might fit. Check the next Button
-                NSArray *block2 = [_blocks objectAtIndex:i+1];
-                NSString *title2 = [block2 objectAtIndex:1];
-                size = [title2 sizeWithFont:buttonFont 
-                                minFontSize:10 
-                             actualFontSize:nil
-                                   forWidth:_view.bounds.size.width-kAlertViewBorder*2 
-                              lineBreakMode:UILineBreakModeClip];
+                width = maxHalfWidth;
+                xOffset = width + kAlertViewBorder * 2;
+                isSecondButton = NO;
+            }
+            else if (i + 1 < _blocks.count)
+            {
+                // In this case there's another button.
+                // Let's check if they fit on the same line.
+                CGSize size = [title sizeWithFont:buttonFont 
+                                      minFontSize:10 
+                                   actualFontSize:nil
+                                         forWidth:_view.bounds.size.width-kAlertViewBorder*2 
+                                    lineBreakMode:UILineBreakModeClip];
                 
                 if (size.width < maxHalfWidth - kAlertViewBorder)
                 {
-                    // They'll fit!
-                    isSecondButton = YES;  // For the next iteration
-                    width = maxHalfWidth;
+                    // It might fit. Check the next Button
+                    NSArray *block2 = [_blocks objectAtIndex:i+1];
+                    NSString *title2 = [block2 objectAtIndex:1];
+                    size = [title2 sizeWithFont:buttonFont 
+                                    minFontSize:10 
+                                 actualFontSize:nil
+                                       forWidth:_view.bounds.size.width-kAlertViewBorder*2 
+                                  lineBreakMode:UILineBreakModeClip];
+                    
+                    if (size.width < maxHalfWidth - kAlertViewBorder)
+                    {
+                        // They'll fit!
+                        isSecondButton = YES;  // For the next iteration
+                        width = maxHalfWidth;
+                    }
                 }
             }
-        }
-        else if (_blocks.count  == 1)
-        {
-            // In this case this is the ony button. We'll size according to the text
-            CGSize size = [title sizeWithFont:buttonFont 
-                                  minFontSize:10 
-                               actualFontSize:nil
-                                     forWidth:_view.bounds.size.width-kAlertViewBorder*2 
-                                lineBreakMode:UILineBreakModeClip];
-
-            size.width = MAX(size.width, 80);
-            if (size.width + 2 * kAlertViewBorder < width)
+            else if (_blocks.count  == 1)
             {
-                width = size.width + 2 * kAlertViewBorder;
-                xOffset = floorf((_view.bounds.size.width - width) * 0.5);
+                // In this case this is the ony button. We'll size according to the text
+                CGSize size = [title sizeWithFont:buttonFont 
+                                      minFontSize:10 
+                                   actualFontSize:nil
+                                         forWidth:_view.bounds.size.width-kAlertViewBorder*2 
+                                    lineBreakMode:UILineBreakModeClip];
+                
+                size.width = MAX(size.width, 80);
+                if (size.width + 2 * kAlertViewBorder < width)
+                {
+                    width = size.width + 2 * kAlertViewBorder;
+                    xOffset = floorf((_view.bounds.size.width - width) * 0.5);
+                }
+            }
+            
+            UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
+            button.frame = CGRectMake(xOffset, _height, width, kAlertButtonHeight);
+            button.titleLabel.font = buttonFont;
+            button.titleLabel.minimumFontSize = 10;
+            button.titleLabel.textAlignment = UITextAlignmentCenter;
+            button.titleLabel.shadowOffset = kAlertViewButtonShadowOffset;
+            button.backgroundColor = [UIColor clearColor];
+            button.tag = i+1;
+            
+            [button setBackgroundImage:image forState:UIControlStateNormal];
+            [button setTitleColor:kAlertViewButtonTextColor forState:UIControlStateNormal];
+            [button setTitleShadowColor:kAlertViewButtonShadowColor forState:UIControlStateNormal];
+            [button setTitle:title forState:UIControlStateNormal];
+            button.accessibilityLabel = title;
+            
+            [button addTarget:self action:@selector(buttonClicked:) forControlEvents:UIControlEventTouchUpInside];
+            
+            [_view addSubview:button];
+            
+            if (!isSecondButton)
+                _height += kAlertButtonHeight + kAlertViewBorder;
+            
+            index++;
+        }
+        
+        _height += 10;  // Margin for the shadow
+        
+        if (_height < background.size.height)
+        {
+            CGFloat offset = background.size.height - _height;
+            _height = background.size.height;
+            CGRect frame;
+            for (NSUInteger i = 0; i < _blocks.count; i++)
+            {
+                UIButton *btn = (UIButton *)[_view viewWithTag:i+1];
+                frame = btn.frame;
+                frame.origin.y += offset;
+                btn.frame = frame;
             }
         }
         
-        UIButton *button = [UIButton buttonWithType:UIButtonTypeCustom];
-        button.frame = CGRectMake(xOffset, _height, width, kAlertButtonHeight);
-        button.titleLabel.font = buttonFont;
-        button.titleLabel.minimumFontSize = 10;
-        button.titleLabel.textAlignment = UITextAlignmentCenter;
-        button.titleLabel.shadowOffset = kAlertViewButtonShadowOffset;
-        button.backgroundColor = [UIColor clearColor];
-        button.tag = i+1;
+        CGRect frame = _view.frame;
+        frame.origin.y = - _height;
+        frame.size.height = _height;
+        _view.frame = frame;
         
-        [button setBackgroundImage:image forState:UIControlStateNormal];
-        [button setTitleColor:kAlertViewButtonTextColor forState:UIControlStateNormal];
-        [button setTitleShadowColor:kAlertViewButtonShadowColor forState:UIControlStateNormal];
-        [button setTitle:title forState:UIControlStateNormal];
-        button.accessibilityLabel = title;
+        UIImageView *modalBackground = [[UIImageView alloc] initWithFrame:_view.bounds];
+        modalBackground.image = background;
+        modalBackground.contentMode = UIViewContentModeScaleToFill;
+        [_view insertSubview:modalBackground atIndex:0];
+        [modalBackground release];
         
-        [button addTarget:self action:@selector(buttonClicked:) forControlEvents:UIControlEventTouchUpInside];
-        
-        [_view addSubview:button];
-        
-        if (!isSecondButton)
-            _height += kAlertButtonHeight + kAlertViewBorder;
-        
-        index++;
-    }
-    
-    _height += 10;  // Margin for the shadow
-    
-    if (_height < background.size.height)
-    {
-        CGFloat offset = background.size.height - _height;
-        _height = background.size.height;
-        CGRect frame;
-        for (NSUInteger i = 0; i < _blocks.count; i++)
+        if (_backgroundImage)
         {
-            UIButton *btn = (UIButton *)[_view viewWithTag:i+1];
-            frame = btn.frame;
-            frame.origin.y += offset;
-            btn.frame = frame;
+            [BlockBackground sharedInstance].backgroundImage = _backgroundImage;
+            [_backgroundImage release];
+            _backgroundImage = nil;
         }
+        [BlockBackground sharedInstance].vignetteBackground = _vignetteBackground;
+        [[BlockBackground sharedInstance] addToMainWindow:_view];
+        
+        __block CGPoint center = _view.center;
+        center.y = floorf([BlockBackground sharedInstance].bounds.size.height * 0.5) + kAlertViewBounce;
+        
+        [UIView animateWithDuration:0.4
+                              delay:0.0
+                            options:UIViewAnimationCurveEaseOut
+                         animations:^{
+                             [BlockBackground sharedInstance].alpha = 1.0f;
+                             _view.center = center;
+                         } 
+                         completion:^(BOOL finished) {
+                             [UIView animateWithDuration:0.1
+                                                   delay:0.0
+                                                 options:0
+                                              animations:^{
+                                                  center.y -= kAlertViewBounce;
+                                                  _view.center = center;
+                                              } 
+                                              completion:nil];
+                         }];
+        
+        [self retain];
+        
     }
-
-    CGRect frame = _view.frame;
-    frame.origin.y = - _height;
-    frame.size.height = _height;
-    _view.frame = frame;
-    
-    UIImageView *modalBackground = [[UIImageView alloc] initWithFrame:_view.bounds];
-    modalBackground.image = background;
-    modalBackground.contentMode = UIViewContentModeScaleToFill;
-    [_view insertSubview:modalBackground atIndex:0];
-    [modalBackground release];
-    
-    if (_backgroundImage)
-    {
-        [BlockBackground sharedInstance].backgroundImage = _backgroundImage;
-        [_backgroundImage release];
-        _backgroundImage = nil;
-    }
-    [BlockBackground sharedInstance].vignetteBackground = _vignetteBackground;
-    [[BlockBackground sharedInstance] addToMainWindow:_view];
-
-    __block CGPoint center = _view.center;
-    center.y = floorf([BlockBackground sharedInstance].bounds.size.height * 0.5) + kAlertViewBounce;
-    
-    [UIView animateWithDuration:0.4
-                          delay:0.0
-                        options:UIViewAnimationCurveEaseOut
-                     animations:^{
-                         [BlockBackground sharedInstance].alpha = 1.0f;
-                         _view.center = center;
-                     } 
-                     completion:^(BOOL finished) {
-                         [UIView animateWithDuration:0.1
-                                               delay:0.0
-                                             options:0
-                                          animations:^{
-                                              center.y -= kAlertViewBounce;
-                                              _view.center = center;
-                                          } 
-                                          completion:nil];
-                     }];
-    
-    [self retain];
 }
 
 - (void)dismissWithClickedButtonIndex:(NSInteger)buttonIndex animated:(BOOL)animated 
@@ -325,6 +330,7 @@ static UIFont *buttonFont = nil;
                                               completion:^(BOOL finished) {
                                                   [[BlockBackground sharedInstance] removeView:_view];
                                                   [_view release]; _view = nil;
+                                                  [[BlockBackground sharedInstance] setAnimationFlag:YES];
                                                   [self autorelease];
                                               }];
                          }];
@@ -333,6 +339,7 @@ static UIFont *buttonFont = nil;
     {
         [[BlockBackground sharedInstance] removeView:_view];
         [_view release]; _view = nil;
+        [[BlockBackground sharedInstance] setAnimationFlag:YES];
         [self autorelease];
     }
 }

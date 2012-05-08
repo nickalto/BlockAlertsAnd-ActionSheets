@@ -12,6 +12,7 @@
 
 @synthesize backgroundImage = _backgroundImage;
 @synthesize vignetteBackground = _vignetteBackground;
+@synthesize animationFlag = _animationFlag;
 
 static BlockBackground *_sharedInstance = nil;
 
@@ -75,6 +76,7 @@ static BlockBackground *_sharedInstance = nil;
         self.userInteractionEnabled = NO;
         self.backgroundColor = [UIColor colorWithWhite:0.4 alpha:0.5f];
         self.vignetteBackground = NO;
+        self.animationFlag = YES;
     }
     return self;
 }

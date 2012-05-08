@@ -21,5 +21,6 @@
 
 @property (nonatomic, retain) UIImage *backgroundImage;
 @property (nonatomic, readwrite) BOOL vignetteBackground;
+@property (nonatomic, readwrite) BOOL animationFlag;
 
 @end
